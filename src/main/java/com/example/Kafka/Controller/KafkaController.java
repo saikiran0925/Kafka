@@ -1,38 +1,30 @@
 package com.example.Kafka.Controller;
 
-import com.example.Kafka.Service.KafkaMessagePublisher;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.Kafka.Service.Consumer;
+import com.example.Kafka.Service.Producer;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/producer")
+@RequestMapping(value = "/api/kafka")
 public class KafkaController
 {
-    @Autowired
-    private KafkaMessagePublisher publisher;
-
-    @PostMapping
-    public ResponseEntity<?> getMessage(@RequestParam String message)
-    {
-        try
-        {
-            publisher.sendMessage(message);
-
-            return ResponseEntity.ok("Message published successfully");
-        }
-        catch (Exception ex)
-        {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    private final Producer producer;
+    private final Consumer consumer;
+    public KafkaController(Producer producerService, Consumer consumer) {
+        this.producer = producerService;
+        this.consumer = consumer;
     }
 
-    @GetMapping(value = "/messages")
-    public List<String> getMessages()
-    {
-        return publisher.getMessages();
+    @PostMapping("/send")
+    public String sendMessage(@RequestParam String topic, @RequestParam String message) {
+        producer.sendMessage(topic, message);
+        return "Message sent to topic " + topic;
     }
- }
+
+    @GetMapping("/messages")
+    public List<String> getMessages() {
+        return consumer.getMessages();
+    }
+}
